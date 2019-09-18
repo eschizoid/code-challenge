@@ -1,0 +1,39 @@
+version: "3.7"
+
+services:
+  graphql-api:
+    container_name: graphql-api
+    build: .
+    links:
+      - mongodb
+    ports:
+      - 8080:8080
+      - 5005:5005
+    environment:
+      DATABASE_HOST: mongodb
+      DATABASE_NAME: otus
+      DATABASE_PASSWORD: mongo
+      DATABASE_PORT: 27017
+      DATABASE_USER: mongo
+      API_PORT: 8080
+    command: /usr/bin/java -jar /app.jar
+
+  mongodb:
+    container_name: mongodb
+    image: mongo:latest
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "mongo"
+      MONGO_INITDB_ROOT_PASSWORD: "mongo"
+      MONGO_INITDB_DATABASE: "otus"
+    command: mongod --auth
+
+  mongo_seed:
+    image: mongo:latest
+    links:
+      - mongodb
+    volumes:
+      - ./bin/students.json:/mongo-seed/students.json
+    command:
+      'bash -c "mongoimport --username mongo --password mongo --authenticationDatabase admin --host mongodb --db otus --collection students --type json --file /mongo-seed/students.json"'
