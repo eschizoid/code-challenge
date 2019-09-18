@@ -1,0 +1,28 @@
+version: "3"
+
+services:
+  graphql-api:
+    image: docker.io/eschizoid/graphql-api:otus
+    links:
+      - mongodb
+    ports:
+      - 8080:8080
+      - 5005:5005
+    environment:
+      DATABASE_HOST: mongodb
+      DATABASE_NAME: otus
+      DATABASE_PASSWORD: mongo
+      DATABASE_PORT: 27017
+      DATABASE_USER: mongo
+      API_PORT: 8080
+    command: /usr/bin/java -jar /app.jar
+
+  mongodb:
+    image: docker.io/eschizoid/mongodb:otus
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "mongo"
+      MONGO_INITDB_ROOT_PASSWORD: "mongo"
+      MONGO_INITDB_DATABASE: "otus"
+    ports:
+      - 27017:27017
+    command: mongod --auth

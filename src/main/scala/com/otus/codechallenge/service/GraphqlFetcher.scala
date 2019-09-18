@@ -26,9 +26,8 @@ trait GraphqlFetcher {
   * An opinionated class for enriching and transforming mongo entities.
   *
   * This class might be bit opinionated since one could possibly argue: why not returning the entities all the way down
-  * to the graphql server? The answer is really simple, the mongo queries started getting little bit difficult to read
-  * and doing that last aggregation for adding the class name to the student list was not an easy task.
-  *
+  * to the graphql server? The answer is really simple, the mongo queries started getting little difficult to read and
+  * doing that last aggregation for adding the class name to the student list was not an easy task.
   */
 class GraphqlStudentsFetcher(studentRepository: StudentRepository, classRepository: ClassRepository) extends GraphqlFetcher with Logging {
 
@@ -46,7 +45,7 @@ class GraphqlStudentsFetcher(studentRepository: StudentRepository, classReposito
         Try(result(studentRepository.fetchStudentByName(firstName), 10 seconds)) match {
           case Success(entities) => studentDetailedInformationEntityToGraph(entities)
           case Failure(e) =>
-            logger.error(f"Unable to find students information using firstr name [$firstName]: $e")
+            logger.error(f"Unable to find students information using first name [$firstName]: $e")
             Seq.empty[StudentDetails]
         }
       case (None, Some(lastName)) =>

@@ -1,11 +1,24 @@
 version: "3.7"
 
 services:
+  mongodb:
+    container_name: mongodb
+    image: mongo:latest
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "mongo"
+      MONGO_INITDB_ROOT_PASSWORD: "mongo"
+      MONGO_INITDB_DATABASE: "otus"
+    command: mongod --auth
+    volumes:
+      - ./database:/mongo-seed
+    networks:
+      - code-challenge
+
   graphql-api:
     container_name: graphql-api
     build: .
-    links:
-      - mongodb
     ports:
       - 8080:8080
       - 5005:5005
@@ -17,23 +30,9 @@ services:
       DATABASE_USER: mongo
       API_PORT: 8080
     command: /usr/bin/java -jar /app.jar
+    networks:
+      - code-challenge
 
-  mongodb:
-    container_name: mongodb
-    image: mongo:latest
-    ports:
-      - 27017:27017
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: "mongo"
-      MONGO_INITDB_ROOT_PASSWORD: "mongo"
-      MONGO_INITDB_DATABASE: "otus"
-    command: mongod --auth
-
-  mongo_seed:
-    image: mongo:latest
-    links:
-      - mongodb
-    volumes:
-      - ./bin/students.json:/mongo-seed/students.json
-    command:
-      'bash -c "mongoimport --username mongo --password mongo --authenticationDatabase admin --host mongodb --db otus --collection students --type json --file /mongo-seed/students.json"'
+networks:
+  code-challenge:
+    name: code-challenge

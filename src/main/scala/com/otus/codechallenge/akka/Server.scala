@@ -1,6 +1,7 @@
 package com.otus.codechallenge.akka
 
 import akka.actor.ActorSystem
+import akka.dispatch.MessageDispatcher
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.server.Directives._
@@ -28,14 +29,27 @@ import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
 
 /**
-  * Main entry for starting the Actor System along with Akka routes.
+  * Main entry for starting the Actor System along with Akka routes. The application only has two endpoints, one for
+  * serving GraphQL queries and the other one for serving the API documentation.
+  *
+  * ==GraphQL Endpoint==
+  * {{{
+  * POST /graphql -H "Content-Type: application/graphql" -q {...}
+  * }}}
+  *
+  * ==API Docs Endpoint==
+  * {{{
+  * GET /api-docs -H "Content-Type: application/json"
+  * }}}
+  *
+  * Note: Please see the spec of this class for more examples: [[com.otus.codechallenge.akka.ServerSpec]]
   */
 object Server extends App with CorsSupport with Logging {
   logger.info(f"Starting HTTP server on port ${sys.env("API_PORT")}...")
 
-  implicit val system           = ActorSystem("graphql-api")
-  implicit val materializer     = ActorMaterializer()
-  implicit val executionContext = system.dispatchers.lookup("akka.stream.default-blocking-io-dispatcher")
+  implicit val system: ActorSystem                 = ActorSystem("graphql-api")
+  implicit val materializer: ActorMaterializer     = ActorMaterializer()
+  implicit val executionContext: MessageDispatcher = system.dispatchers.lookup("akka.stream.default-blocking-io-dispatcher")
 
   val client = MongoConnection(
     sys.env("DATABASE_HOST"),
