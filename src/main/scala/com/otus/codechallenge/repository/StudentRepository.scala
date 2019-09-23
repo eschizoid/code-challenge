@@ -11,7 +11,7 @@ import scala.language.reflectiveCalls
 trait StudentRepository {
 
   /**
-    * Fetches students by name in async fashion way
+    * Fetches students by name in async fashion way.
     * @param name the student name
     * @return a list of students
     *
@@ -33,7 +33,7 @@ trait StudentRepository {
   def fetchStudentByName(name: String): Future[Seq[Students]]
 
   /**
-    * Fetches students by last in async fashion way
+    * Fetches students by last in async fashion way.
     * @param last the student last name
     * @return a list of students
     *
@@ -55,7 +55,7 @@ trait StudentRepository {
   def fetchStudentByLastName(last: String): Future[Seq[Students]]
 
   /**
-    * Fetches students by last in async fashion way
+    * Fetches students by last name in async fashion way.
     * @param name the student name
     * @param last the student last name
     * @return a list of students
@@ -82,7 +82,7 @@ trait StudentRepository {
 }
 
 /**
-  * Repository class for returning Student entities
+  * Repository class for returning Student entities.
   * @param client the mongo client
   */
 class StudentMongoRepository(client: MongoDatabase) extends StudentRepository with Logging {

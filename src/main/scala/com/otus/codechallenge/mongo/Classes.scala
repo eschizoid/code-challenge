@@ -3,7 +3,7 @@ package com.otus.codechallenge.mongo
 import org.mongodb.scala.bson.ObjectId
 
 /*
- * A collection of mongo entities use when retrieving student classes information
+ * A collection of mongo entities use when retrieving student classes information.
  */
 case class Classes(_id: ObjectId, classes: Map[String, String])
 

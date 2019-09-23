@@ -9,7 +9,7 @@ import scala.concurrent.duration._
 class StudentRepositorySpec extends FlatSpec with Matchers {
   val client = MongoConnection("mongodb", 27017, "mongo", "otus", "mongo")
 
-  "Student repository" should "find student by first name" in {
+  "Student repository" should "find a student by first name" in {
     // Prepare
     val studentRepository = StudentMongoRepository(client)
 
@@ -20,7 +20,7 @@ class StudentRepositorySpec extends FlatSpec with Matchers {
     students should have size 1
   }
 
-  "Student repository" should "find student by last name" in {
+  "Student repository" should "find a student by last name" in {
     // Prepare
     val studentRepository = StudentMongoRepository(client)
 
@@ -31,7 +31,7 @@ class StudentRepositorySpec extends FlatSpec with Matchers {
     students should have size 1
   }
 
-  "Student repository" should "find student by first and last name" in {
+  "Student repository" should "find a student by first and last name" in {
     // Prepare
     val studentRepository = StudentMongoRepository(client)
 
@@ -49,7 +49,7 @@ class StudentRepositorySpec extends FlatSpec with Matchers {
     student.gpa shouldBe 3.75
   }
 
-  "Student repository" should "find students by last name" in {
+  "Student repository" should "find some students by last name" in {
     // Prepare
     val studentRepository = StudentMongoRepository(client)
 

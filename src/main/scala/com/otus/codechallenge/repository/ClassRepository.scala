@@ -18,7 +18,7 @@ trait ClassRepository {
 }
 
 /**
-  * Repository class for returning Class entities
+  * Repository class for returning Class entities.
   * @param client the mongo client
   */
 class ClassMongoRepository(client: MongoDatabase) extends ClassRepository with Logging {

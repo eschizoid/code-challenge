@@ -7,7 +7,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{Directive0, Route}
 
 /**
-  * Akka filter for  adding CORS support
+  * Akka filter for adding CORS support.
   */
 trait CorsSupport {
   private def addAccessControlHeaders(): Directive0 = {
