@@ -2,13 +2,12 @@ package com.otus.codechallenge.service
 
 import com.otus.codechallenge.graphql.{StudentClasses, StudentDetails}
 import com.otus.codechallenge.mongo
-import com.otus.codechallenge.mongo.Students
+import com.otus.codechallenge.mongo.{Classes, Students}
 import com.otus.codechallenge.repository.{ClassRepository, StudentRepository}
 import com.otus.codechallenge.util.Logging
 
-import scala.concurrent.Await.result
-import scala.concurrent.duration._
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 trait GraphqlFetcher {
 
@@ -19,7 +18,7 @@ trait GraphqlFetcher {
     * @param lastName optional last name to be used when searching for students
     * @return a list of students detailed information of type GraphQL
     */
-  def searchAndTransformStudents(firsName: Option[String], lastName: Option[String]): Seq[StudentDetails]
+  def searchAndTransformStudents(firsName: Option[String], lastName: Option[String]): Future[Seq[StudentDetails]]
 }
 
 /**
@@ -31,55 +30,40 @@ trait GraphqlFetcher {
   */
 class GraphqlStudentsFetcher(studentRepository: StudentRepository, classRepository: ClassRepository) extends GraphqlFetcher with Logging {
 
-  override def searchAndTransformStudents(firsName: Option[String], lastName: Option[String]): Seq[StudentDetails] = {
+  override def searchAndTransformStudents(firsName: Option[String], lastName: Option[String]): Future[Seq[StudentDetails]] = {
     logger.debug("Aggregating students and classes")
     (firsName, lastName) match {
       case (Some(firstName), Some(lastName)) =>
-        Try(result(studentRepository.fetchStudentByNameAndLastName(firstName, lastName), 10 seconds)) match {
-          case Success(entities) => studentDetailedInformationEntityToGraph(entities)
-          case Failure(e) =>
-            logger.error(f"Unable to find students information using first and last name [$firstName $lastName]: $e")
-            Seq.empty[StudentDetails]
-        }
+        for {
+          classes  <- classRepository.fetchAll()
+          students <- studentRepository.fetchStudentByNameAndLastName(firstName, lastName)
+        } yield studentDetailedInformationEntityToGraph(students, classes)
       case (Some(firstName), None) =>
-        Try(result(studentRepository.fetchStudentByName(firstName), 10 seconds)) match {
-          case Success(entities) => studentDetailedInformationEntityToGraph(entities)
-          case Failure(e) =>
-            logger.error(f"Unable to find students information using first name [$firstName]: $e")
-            Seq.empty[StudentDetails]
-        }
+        for {
+          classes  <- classRepository.fetchAll()
+          students <- studentRepository.fetchStudentByName(firstName)
+        } yield studentDetailedInformationEntityToGraph(students, classes)
       case (None, Some(lastName)) =>
-        Try(result(studentRepository.fetchStudentByLastName(lastName), 10 seconds)) match {
-          case Success(entities) => studentDetailedInformationEntityToGraph(entities)
-          case Failure(e) =>
-            logger.error(f"Unable to find students information using last name [$lastName]: $e")
-            Seq.empty[StudentDetails]
-        }
-      case (None, None) => Seq.empty[StudentDetails]
+        for {
+          classes  <- classRepository.fetchAll()
+          students <- studentRepository.fetchStudentByLastName(lastName)
+        } yield studentDetailedInformationEntityToGraph(students, classes)
+      case (None, None) => Future { Seq.empty[StudentDetails] }
     }
   }
 
-  private def studentDetailedInformationEntityToGraph(entities: Seq[Students]): Seq[StudentDetails] = {
-    entities flatMap { entity =>
-      entity.students map { studentEntity =>
-        StudentDetails(studentEntity.first,
-                       studentEntity.last,
-                       studentEntity.email,
-                       studentEntity.gpa,
-                       classEntityToGraph(studentEntity.studentClasses))
+  private def studentDetailedInformationEntityToGraph(studentEntities: Seq[Students], classEntities: Seq[Classes]): Seq[StudentDetails] = {
+    studentEntities flatMap { studentEntity =>
+      studentEntity.students map { student =>
+        StudentDetails(student.first, student.last, student.email, student.gpa, classEntityToGraph(student.studentClasses, classEntities))
       }
     }
   }
 
-  private def classEntityToGraph(studentClassesEntity: Seq[mongo.StudentClasses]): Seq[StudentClasses] = {
-    // TODO we should consider caching this entity if we dont figure out how to cache at the GraphQL Server
-    Try(result(classRepository.fetchAll(), 10 seconds)) match {
-      case Success(entities) =>
-        val classesCatalogue = entities.head.classes
-        studentClassesEntity.map(`class` => StudentClasses(`class`.id.toString, classesCatalogue(`class`.id.toString), `class`.grade))
-      case Failure(e) =>
-        logger.error(f"Unable to retrieve class catalogue: $e")
-        Seq.empty[StudentClasses]
+  private def classEntityToGraph(studentClassesEntity: Seq[mongo.StudentClasses], classesEntity: Seq[Classes]): Seq[StudentClasses] = {
+    val classesCatalogue = classesEntity.head.classes
+    studentClassesEntity map { `class` =>
+      StudentClasses(`class`.id.toString, classesCatalogue(`class`.id.toString), `class`.grade)
     }
   }
 }

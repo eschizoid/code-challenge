@@ -4,6 +4,9 @@ import com.otus.codechallenge.mongo.MongoConnection
 import com.otus.codechallenge.repository.{ClassMongoRepository, StudentMongoRepository}
 import org.scalatest.{FlatSpec, Matchers}
 
+import scala.concurrent.Await
+import scala.concurrent.duration._
+
 class GraphqlFetcherSpec extends FlatSpec with Matchers {
   val client            = MongoConnection("mongodb", 27017, "mongo", "otus", "mongo")
   val classRepository   = ClassMongoRepository(client)
@@ -14,7 +17,7 @@ class GraphqlFetcherSpec extends FlatSpec with Matchers {
     val fetcher = GraphqlStudentsFetcher(studentRepository, classRepository)
 
     // Exercise
-    val student = fetcher.searchAndTransformStudents(Some("Samantha"), Some("Ware")).head
+    val student = Await.result(fetcher.searchAndTransformStudents(Some("Samantha"), Some("Ware")), 10 seconds).head
 
     // Assert
     student.firstName shouldBe "Samantha"
@@ -29,7 +32,7 @@ class GraphqlFetcherSpec extends FlatSpec with Matchers {
     val fetcher = GraphqlStudentsFetcher(studentRepository, classRepository)
 
     // Exercise
-    val student = fetcher.searchAndTransformStudents(Some("Mike"), None).head
+    val student = Await.result(fetcher.searchAndTransformStudents(Some("Mike"), None), 10 seconds).head
 
     // Assert
     student should not be None
@@ -40,7 +43,7 @@ class GraphqlFetcherSpec extends FlatSpec with Matchers {
     val fetcher = GraphqlStudentsFetcher(studentRepository, classRepository)
 
     // Exercise
-    val student = fetcher.searchAndTransformStudents(None, Some("Smith"))
+    val student = Await.result(fetcher.searchAndTransformStudents(None, Some("Smith")), 10 seconds)
 
     // Assert
     student should have size 2
